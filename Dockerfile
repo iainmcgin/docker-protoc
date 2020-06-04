@@ -79,6 +79,11 @@ RUN curl -sSL https://github.com/marcoferrer/kroto-plus/releases/download/v${kro
     -o /tmp/protoc-gen-kroto-plus && \
     chmod +x /tmp/protoc-gen-kroto-plus
 
+RUN curl -sSL https://bintray.com/bintray/jcenter/download_file?file_path=io%2Fvertx%2Fprotoc-gen-grpc-java%2F1.25.0%2Fprotoc-gen-grpc-java-1.25.0-linux-x86_64.exe \
+    -o /tmp/protoc-gen-vertx && \
+    chmod +x /tmp/protoc-gen-vertx
+
+
 FROM alpine:3.9 AS protoc-all
 
 RUN set -ex && apk --update --no-cache add \
@@ -104,8 +109,8 @@ COPY --from=build /usr/local/include/google/ /opt/include/google
 COPY --from=build /usr/local/bin/prototool /usr/local/bin/prototool
 COPY --from=build /go/bin/* /usr/local/bin/
 COPY --from=build /tmp/grpc_web_plugin /usr/local/bin/grpc_web_plugin
-
 COPY --from=build /tmp/protoc-gen-scala /usr/local/bin/
+COPY --from=build /tmp/protoc-gen-vertx /usr/local/bin/
 
 COPY --from=build /tmp/protoc-gen-kroto-plus /usr/local/bin/
 
