@@ -64,7 +64,7 @@ RUN go get -u github.com/coinbase/protoc-gen-rbi
 RUN go get github.com/gomatic/renderizer/cmd/renderizer
 
 # Add scala support
-RUN curl -LO https://github.com/scalapb/ScalaPB/releases/download/v0.9.6/protoc-gen-scala-0.9.6-linux-x86_64.zip \ 
+RUN curl -LO https://github.com/scalapb/ScalaPB/releases/download/v0.9.6/protoc-gen-scala-0.9.6-linux-x86_64.zip \
     && unzip protoc-gen-scala-0.9.6-linux-x86_64.zip \
     && chmod +x /tmp/protoc-gen-scala
 
@@ -72,6 +72,11 @@ RUN curl -LO https://github.com/scalapb/ScalaPB/releases/download/v0.9.6/protoc-
 RUN curl -sSL https://github.com/grpc/grpc-web/releases/download/${grpc_web}/protoc-gen-grpc-web-${grpc_web}-linux-x86_64 \
     -o /tmp/grpc_web_plugin && \
     chmod +x /tmp/grpc_web_plugin
+
+RUN curl -sSL https://bintray.com/bintray/jcenter/download_file?file_path=io%2Fvertx%2Fprotoc-gen-grpc-java%2F1.25.0%2Fprotoc-gen-grpc-java-1.25.0-linux-x86_64.exe \
+    -o /tmp/protoc-gen-vertx && \
+    chmod +x /tmp/protoc-gen-vertx
+
 
 FROM alpine:3.9 AS protoc-all
 
@@ -97,8 +102,8 @@ COPY --from=build /usr/local/include/google/ /opt/include/google
 COPY --from=build /usr/local/bin/prototool /usr/local/bin/prototool
 COPY --from=build /go/bin/* /usr/local/bin/
 COPY --from=build /tmp/grpc_web_plugin /usr/local/bin/grpc_web_plugin
-
 COPY --from=build /tmp/protoc-gen-scala /usr/local/bin/
+COPY --from=build /tmp/protoc-gen-vertx /usr/local/bin/
 
 COPY --from=build /go/src/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options/ /opt/include/protoc-gen-swagger/options/
 

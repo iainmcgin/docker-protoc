@@ -18,6 +18,7 @@ printUsage() {
     echo " --with-rbi                     Generate Sorbet type declaration files (.rbi files) - see https://github.com/coinbase/protoc-gen-rbi"
     echo " --with-typescript              Generate TypeScript declaration files (.d.ts files) - see https://github.com/improbable-eng/ts-protoc-gen#readme"
     echo " --with-validator               Generate validations for (${VALIDATOR_SUPPORTED_LANGUAGES[@]}) - see https://github.com/envoyproxy/protoc-gen-validate"
+    echo " --with-vertx                   Generate Vert.x extras for Java - see https://vertx.io/docs/vertx-grpc/java/"
     echo " --go-source-relative           Make go import paths 'source_relative' - see https://github.com/golang/protobuf#parameters"
     echo " --go-package-map               Map proto imports to go import paths"
     echo " --go-plugin-micro              Replaces the Go gRPC plugin with go-micro"
@@ -41,6 +42,7 @@ VALIDATOR_SUPPORTED_LANGUAGES=("go" "gogo" "cpp" "java" "python")
 DOCS_FORMAT="html,index.html"
 GEN_RBI=false
 GEN_TYPESCRIPT=false
+GEN_VERTX=false
 LINT=false
 LINT_CHECKS=""
 SUPPORTED_LANGUAGES=("go" "ruby" "csharp" "java" "python" "objc" "gogo" "php" "node" "web" "cpp" "descriptor_set" "scala")
@@ -125,6 +127,9 @@ while test $# -gt 0; do
             GEN_VALIDATOR=true
             shift
             ;;
+        --with-vertx)
+            GEN_VERTX=true
+            shift
         --lint)
             LINT=true
             if [ "$#" -gt 1 ] && [[ $2 != -* ]]; then
@@ -237,6 +242,11 @@ if [[ "$GEN_TYPESCRIPT" == true && "$GEN_LANG" != "node" ]]; then
     exit 1
 fi
 
+if [[ "$GEN_VERTX" == true && "$GEN_LANG" != "java" ]]; then
+    echo "Generating Vert.x extensions is Java specific."
+    exit 1
+fi
+
 PLUGIN_LANG=$GEN_LANG
 if [ $PLUGIN_LANG == 'objc' ] ; then
     PLUGIN_LANG='objective_c'
@@ -340,6 +350,10 @@ if [[ $GEN_TYPESCRIPT == true ]]; then
     GEN_STRING="$GEN_STRING --ts_out=service=grpc-node:$OUT_DIR"
 fi
 
+if [[ $GEN_VERTX == true ]]; then
+    GEN_STRING="$GEN_STRING --vertx_out=$OUT_DIR"
+fi
+
 LINT_STRING=''
 if [[ $LINT == true ]]; then
     if [[ $LINT_CHECKS == '' ]]; then
@@ -395,11 +409,11 @@ if [ $GEN_GATEWAY = true ]; then
 
     protoc $PROTO_INCLUDE \
 		--grpc-gateway_out=logtostderr=true:$GATEWAY_DIR ${PROTO_FILES[@]}
-    
+
     if [[ $SWAGGER_JSON == true ]]; then
         protoc $PROTO_INCLUDE  \
 		    --swagger_out=logtostderr=true,json_names_for_fields=true:$GATEWAY_DIR ${PROTO_FILES[@]}
-    else 
+    else
         protoc $PROTO_INCLUDE  \
 		    --swagger_out=logtostderr=true:$GATEWAY_DIR ${PROTO_FILES[@]}
     fi
